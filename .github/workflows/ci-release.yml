@@ -120,3 +120,41 @@ jobs:
           git tag -a "$tag" -m "Kenvix Bluetooth Unlock for Android $tag"
           git push origin "refs/tags/$tag"
           gh release create "$tag" release-files/* --verify-tag --title "Kenvix Bluetooth Unlock for Android $tag" --generate-notes --latest
+
+  preview:
+    name: Publish Android preview APK
+    needs: verify
+    if: needs.verify.outputs.signed != 'true' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          name: android-debug-apk
+          path: preview-files
+      - name: Publish preview release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          version="$(tr -d '\r\n' < VERSION)"
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          tag="v${version}-preview.1"
+          mkdir -p release-files
+          cp preview-files/app-debug.apk "release-files/KenvixBluetoothUnlock-Android-${tag}-debug.apk"
+          (cd release-files && sha256sum *.apk > SHA256SUMS.txt)
+          git fetch --tags --force
+          if git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
+            echo "Preview $tag already exists."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$tag" -m "Kenvix Bluetooth Unlock for Android preview $tag"
+          git push origin "refs/tags/$tag"
+          gh release create "$tag" release-files/* --verify-tag --prerelease --title "Kenvix Bluetooth Unlock for Android $tag" --notes '可安装的调试签名预览版，供兼容性测试使用。正式发行版使用固定的签名密钥；切换到正式版时需卸载本预览版。'
