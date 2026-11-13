@@ -8,6 +8,7 @@
 - 手动确认：在手机上使用生物识别或系统凭据确认。
 - Android `connectedDevice` 前台服务、常驻通知、可选开机启动。
 - BLE GATT 挑战响应协议，与 Windows 客户端对应。
+- JVM 自动化测试使用 Windows 与 Android 共享的 ECDSA 签名数据，检查随机挑战、签名和公钥指纹。
 
 ## 环境
 
@@ -33,6 +34,17 @@ GitHub Actions 会自动编译、执行 JVM 单元测试和 Android Lint，并�
 | `ANDROID_KEY_PASSWORD` | 签名密钥密码 |
 
 请妥善保存签名文件及密码，后续更新版本需要使用同一签名密钥。签名信息不应提交到 GitHub 仓库。
+
+## 两端协议测试
+
+Windows 使用 CNG 验证签名，Android 使用 `SHA256withECDSA` 验证同一组签名数据，包含错误挑战拒绝测试。
+
+```bash
+kotlinc app/src/main/java/top/kenvix/bleunlock/Protocol.kt tests/InteropVectorSmoke.kt -include-runtime -d /tmp/interop.jar
+java -jar /tmp/interop.jar
+```
+
+完整 Android 单元测试使用 Gradle 执行 `:app:testDebugUnitTest`，其中包含 `InteropVectorTest.kt`。两端在真实蓝牙设备上的认证测试步骤见 Windows 仓库的测试说明。
 
 ## Windows 客户端
 
