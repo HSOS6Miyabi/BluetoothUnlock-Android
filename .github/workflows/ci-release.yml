@@ -43,6 +43,11 @@ jobs:
       - name: Run JVM tests, lint, build debug APK
         shell: bash
         run: gradle --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+      - name: Print Android lint diagnostics
+        if: failure()
+        shell: bash
+        run: |
+          find app/build -name 'lint-results-debug.txt' -print -exec cat {} \;
       - name: Build signed release APK when signing secrets exist
         id: signed
         shell: bash
