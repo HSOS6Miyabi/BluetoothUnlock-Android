@@ -14,7 +14,7 @@ import java.util.Properties
 
 class InteropVectorTest {
     private val fixture = Properties().apply {
-        requireNotNull(javaClass.classLoader?.getResourceAsStream("interop_vectors.properties")).use { load(it) }
+        requireNotNull(InteropVectorTest::class.java.classLoader?.getResourceAsStream("interop_vectors.properties")).use { load(it) }
     }
 
     private fun bytes(name: String): ByteArray {
