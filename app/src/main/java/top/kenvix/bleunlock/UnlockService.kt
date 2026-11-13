@@ -1,6 +1,7 @@
 package top.kenvix.bleunlock
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -254,7 +255,13 @@ class UnlockService : Service() {
         Protocol.response(2)
     }
 
+    @SuppressLint("MissingPermission")
     private fun launchPeripheral() {
+        if (!hasBluetoothPermissions()) {
+            status.value = "蓝牙权限已被撤销，请重新授权"
+            stopSelf()
+            return
+        }
         val manager = getSystemService(BLUETOOTH_SERVICE) as BluetoothManager
         val server = manager.openGattServer(this, gattCallbacks)
         if (server == null) {
@@ -448,6 +455,7 @@ class UnlockService : Service() {
         }
     }
 
+    @SuppressLint("MissingPermission")
     private fun stopPeripheral() {
         try {
             if (advertising) advertiser?.stopAdvertising(advertiseCallbacks)
