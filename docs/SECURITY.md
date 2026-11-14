@@ -13,12 +13,12 @@ Windows 10/11 可能使用 `CPUS_LOGON` 场景处理解锁。程序会检查当�
 ## Windows 凭据的保护
 
 - 保存设置前，使用 `LogonUserW` 检查 Windows 账户密码是否有效。
-- 使用 Windows DPAPI 的 `CRYPTPROTECT_LOCAL_MACHINE` 选项加密密码。
-- 将加密数据存放于 `%ProgramData%\Kenvix\BluetoothUnlock\configuration.dat`，文件夹的访问控制列表限制为 `SYSTEM` 与本地管理员。
+- 使用 Windows DPAPI 的 `CRYPTPROTECT_LOCAL_MACHINE` 选项加密密码；TPM 支持所需算法时，再使用 TPM 中的不可导出 RSA 密钥和 AES-GCM 加密。
+- 将加密数据存放于 `%ProgramData%\BluetoothUnlock\configuration.dat`，文件夹的访问控制列表限制为 `SYSTEM` 与本地管理员。
 - 每次解密和提交密码后尽快清除工作内存中的明文内容。
 - 高安全性模式绑定公钥；新手机必须重新核对指纹。
 
-管理员权限和 SYSTEM 权限能够访问本机的加密配置。计算机遭到管理员级恶意软件控制，或攻击者已经取得操作系统的管理权限时，无法仅依靠 DPAPI 阻止其访问登录凭据。启用 BitLocker 可以降低设备丢失后离线读取数据的风险。
+当 TPM 不可用时，Windows 会继续使用 DPAPI。管理员或 SYSTEM 进程仍可能调用系统密钥接口，因此仍需保护系统管理权限。清除 TPM 或迁移到另一台电脑后，受 TPM 保护的凭据需要重新输入。启用 BitLocker 可以降低设备丢失后离线读取数据的风险。
 
 ## 安全等级
 

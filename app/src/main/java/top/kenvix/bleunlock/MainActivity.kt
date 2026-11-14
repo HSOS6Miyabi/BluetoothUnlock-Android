@@ -166,7 +166,7 @@ private fun UnlockScreen() {
                 .padding(horizontal = 22.dp, vertical = 24.dp),
             verticalArrangement = Arrangement.spacedBy(22.dp)
         ) {
-            Text("KENVIX / SECURITY", style = MaterialTheme.typography.labelLarge,
+            Text("BLUETOOTH UNLOCK", style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary, letterSpacing = 2.sp)
             Text("蓝牙解锁", style = MaterialTheme.typography.displayMedium,
                 fontWeight = FontWeight.Bold)
@@ -246,7 +246,7 @@ private fun UnlockScreen() {
                     }
                     OutlinedButton(onClick = {
                         val clipboard = context.getSystemService(ClipboardManager::class.java)
-                        clipboard.setPrimaryClip(ClipData.newPlainText("Kenvix fingerprint", fingerprint))
+                        clipboard.setPrimaryClip(ClipData.newPlainText("蓝牙公钥指纹", fingerprint))
                     }, modifier = Modifier.fillMaxWidth()) { Text("复制指纹") }
                 }
             }

@@ -2,6 +2,10 @@
 
 此文档描述 Windows 与 Android 之间的蓝牙低功耗（BLE）GATT 数据格式。连接时 Windows 为 GATT 客户端，Android 为 GATT 服务端。
 
+## BLE 广播与设备名称
+
+Android 将主服务 UUID 放入 BLE 主广播数据，并通过扫描响应发送系统蓝牙设备名称。Windows 使用主动扫描，收到名称后才在附近设备列表中显示相应设备。部分手环不会广播名称，因此无法出现在列表中。Android 系统蓝牙名称过长可能导致扫描响应无法发送，请将设备名称设置得简短一些。
+
 ## UUID
 
 | 名称 | UUID | 方向 |

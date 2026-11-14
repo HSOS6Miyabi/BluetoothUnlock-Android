@@ -52,7 +52,7 @@ class ApprovalActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize().padding(insets).padding(24.dp),
                         verticalArrangement = Arrangement.Center
                     ) {
-                        Text("KENVIX / SECURITY", color = MaterialTheme.colorScheme.primary,
+                        Text("BLUETOOTH UNLOCK", color = MaterialTheme.colorScheme.primary,
                             style = MaterialTheme.typography.labelLarge)
                         Spacer(Modifier.height(18.dp))
                         Text("确认解锁请求", style = MaterialTheme.typography.headlineLarge,
