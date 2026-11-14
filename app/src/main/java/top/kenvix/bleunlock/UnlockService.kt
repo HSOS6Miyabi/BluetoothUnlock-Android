@@ -325,7 +325,7 @@ class UnlockService : Service() {
         }
     }
 
-    private val advertiseCallbacks = object : AdvertiseCallback() {
+    private val advertiseCallbacks: AdvertiseCallback = object : AdvertiseCallback() {
         override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
             advertising = true
             val mode = if (Preferences.manual(this@UnlockService))
@@ -346,7 +346,7 @@ class UnlockService : Service() {
                         .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED)
                         .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_MEDIUM)
                         .setConnectable(true).build()
-                    advertiser?.startAdvertising(settings, primary, advertiseCallbacks)
+                    advertiser?.startAdvertising(settings, primary, this)
                     return
                 } catch (_: Exception) { }
             }
