@@ -182,7 +182,7 @@ class UnlockService : Service() {
         val mode = if (Preferences.manual(this)) "手动确认" else "自动认证"
         return Notification.Builder(this, CHANNEL_ACTIVE)
             .setSmallIcon(android.R.drawable.ic_lock_idle_lock)
-            .setContentTitle("Kenvix 蓝牙解锁正在运行")
+            .setContentTitle("蓝牙解锁正在运行")
             .setContentText("$mode · 正在等待附近 Windows 电脑")
             .setContentIntent(open)
             .setOngoing(true)
@@ -304,7 +304,10 @@ class UnlockService : Service() {
             .setIncludeDeviceName(false)
             .setIncludeTxPowerLevel(false)
             .build()
-        le.startAdvertising(settings, data, advertiseCallbacks)
+        // Keep the 128-bit service UUID in the primary packet. The device name
+        // is carried in scan response to stay within the legacy BLE size limit.
+        val scanResponse = AdvertiseData.Builder().setIncludeDeviceName(true).build()
+        le.startAdvertising(settings, data, scanResponse, advertiseCallbacks)
     }
 
     private val advertiseCallbacks = object : AdvertiseCallback() {
@@ -314,7 +317,9 @@ class UnlockService : Service() {
                 "正在广播 · 需要手机确认解锁" else "正在广播 · 自动响应认证"
         }
         override fun onStartFailure(errorCode: Int) {
-            status.value = "蓝牙广播失败（错误代码 $errorCode）"
+            status.value = if (errorCode == AdvertiseCallback.ADVERTISE_FAILED_DATA_TOO_LARGE)
+                "蓝牙设备名称过长，请在系统蓝牙设置中缩短手机名称后重新启动服务"
+            else "蓝牙广播失败（错误代码 $errorCode）"
             stopSelf()
         }
     }

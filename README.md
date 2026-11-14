@@ -1,4 +1,4 @@
-# Kenvix Bluetooth Unlock for Android
+# Bluetooth Unlock for Android
 
 为 Windows 原生锁屏提供蓝牙身份认证的 Android 客户端。使用 Kotlin、Jetpack Compose 和 Material 3 实现界面，并通过 Android Keystore 保存 ECDSA P-256 私钥。
 
