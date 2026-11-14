@@ -308,7 +308,15 @@ class UnlockService : Service() {
             .build()
         // Advertising the service UUID always takes precedence over sending the
         // name. A long phone name must never disable the authentication service.
-        val includeName = AdvertiseNamePolicy.canIncludeName(adapter.name)
+        val deviceName = if (
+            checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) ==
+                PackageManager.PERMISSION_GRANTED
+        ) try {
+            adapter.name
+        } catch (_: SecurityException) {
+            null
+        } else null
+        val includeName = AdvertiseNamePolicy.canIncludeName(deviceName)
         advertisingIncludesName = includeName
         nameOmitted = !includeName
         if (includeName) {
