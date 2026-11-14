@@ -75,6 +75,8 @@ class UnlockService : Service() {
     private var advertiser: BluetoothLeAdvertiser? = null
     private var active = false
     private var advertising = false
+    private var advertisingIncludesName = false
+    private var nameOmitted = false
     private val bluetoothStateReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent?) {
             if (intent?.action != BluetoothAdapter.ACTION_STATE_CHANGED || !active) return
@@ -288,7 +290,7 @@ class UnlockService : Service() {
 
     private fun advertise() {
         val le = adapter.bluetoothLeAdvertiser
-        if (le == null || !adapter.isMultipleAdvertisementSupported) {
+        if (le == null) {
             status.value = "当前手机不支持蓝牙低功耗外围设备广播"
             stopSelf()
             return
@@ -304,22 +306,51 @@ class UnlockService : Service() {
             .setIncludeDeviceName(false)
             .setIncludeTxPowerLevel(false)
             .build()
-        // Keep the 128-bit service UUID in the primary packet. The device name
-        // is carried in scan response to stay within the legacy BLE size limit.
-        val scanResponse = AdvertiseData.Builder().setIncludeDeviceName(true).build()
-        le.startAdvertising(settings, data, scanResponse, advertiseCallbacks)
+        // Advertising the service UUID always takes precedence over sending the
+        // name. A long phone name must never disable the authentication service.
+        val includeName = AdvertiseNamePolicy.canIncludeName(adapter.name)
+        advertisingIncludesName = includeName
+        nameOmitted = !includeName
+        if (includeName) {
+            try {
+                val scanResponse = AdvertiseData.Builder().setIncludeDeviceName(true).build()
+                le.startAdvertising(settings, data, scanResponse, advertiseCallbacks)
+            } catch (_: IllegalArgumentException) {
+                advertisingIncludesName = false
+                nameOmitted = true
+                le.startAdvertising(settings, data, advertiseCallbacks)
+            }
+        } else {
+            le.startAdvertising(settings, data, advertiseCallbacks)
+        }
     }
 
     private val advertiseCallbacks = object : AdvertiseCallback() {
         override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
             advertising = true
-            status.value = if (Preferences.manual(this@UnlockService))
-                "正在广播 · 需要手机确认解锁" else "正在广播 · 自动响应认证"
+            val mode = if (Preferences.manual(this@UnlockService))
+                "需要手机确认解锁" else "自动响应认证"
+            status.value = if (nameOmitted)
+                "正在广播 · $mode · 设备名称未发送，Windows 会显示解锁服务设备"
+            else "正在广播 · $mode"
         }
         override fun onStartFailure(errorCode: Int) {
-            status.value = if (errorCode == AdvertiseCallback.ADVERTISE_FAILED_DATA_TOO_LARGE)
-                "蓝牙设备名称过长，请在系统蓝牙设置中缩短手机名称后重新启动服务"
-            else "蓝牙广播失败（错误代码 $errorCode）"
+            if (errorCode == AdvertiseCallback.ADVERTISE_FAILED_DATA_TOO_LARGE &&
+                advertisingIncludesName) {
+                advertisingIncludesName = false
+                nameOmitted = true
+                try {
+                    val primary = AdvertiseData.Builder()
+                        .addServiceUuid(ParcelUuid(Protocol.SERVICE)).build()
+                    val settings = AdvertiseSettings.Builder()
+                        .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED)
+                        .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_MEDIUM)
+                        .setConnectable(true).build()
+                    advertiser?.startAdvertising(settings, primary, advertiseCallbacks)
+                    return
+                } catch (_: Exception) { }
+            }
+            status.value = "蓝牙广播失败（错误代码 $errorCode），请检查手机的蓝牙外围设备广播能力"
             stopSelf()
         }
     }
@@ -463,13 +494,15 @@ class UnlockService : Service() {
     @SuppressLint("MissingPermission")
     private fun stopPeripheral() {
         try {
-            if (advertising) advertiser?.stopAdvertising(advertiseCallbacks)
+            advertiser?.stopAdvertising(advertiseCallbacks)
             gatt?.clearServices()
             gatt?.close()
         } catch (_: Exception) { }
         advertiser = null
         gatt = null
         advertising = false
+        advertisingIncludesName = false
+        nameOmitted = false
         synchronized(lock) {
             challenges.values.forEach { cancelChallengeNotification(it.id) }
             challenges.clear()
