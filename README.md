@@ -58,3 +58,7 @@ Windows 的 Credential Provider、设置程序与安装脚本位于 [BluetoothUn
 ## 协议与安全
 
 [通信协议](docs/PROTOCOL.md) · [安全说明](docs/SECURITY.md) · [测试说明](docs/TESTING.md)。
+
+## 交接与维护文档
+
+首次接手请阅读 [项目交接指南](docs/HANDOVER.md)。开发时参考 [架构与模块职责](docs/ARCHITECTURE.md)、[项目台账](docs/PROJECT_LEDGER.md)、[开发和发布流程](docs/DEVELOPMENT.md) 及 [实体设备测试记录](docs/DEVICE_TEST_RECORD.md)。运行 `python3 scripts/check_docs.py` 可检查文档链接和 Android 版本信息。

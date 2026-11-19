@@ -1,5 +1,13 @@
 # 安全设计与限制
 
+## Android 手机身份验证
+
+- Android 端私钥由 `KeystoreIdentity.kt` 在 Android Keystore 中生成，使用 ECDSA P-256 对 Windows 的一次性挑战签名；私钥不会通过 BLE 发送。
+- 自动模式允许应用在后台调用私钥；当前 Keystore 配置为 `setUserAuthenticationRequired(false)`。手动模式在签名前通过 `ApprovalActivity.kt` 要求用户使用系统身份验证确认每次请求。请在修改密钥认证条件后分别验证两种模式。
+- 设备名称、MAC 地址和 RSSI 用于发现与辅助判断，不能代替 Windows 对签名和已绑定公钥的验证，也不能单独防御蓝牙中继攻击。
+- 用户撤销蓝牙或通知权限、厂商电源管理限制后台服务、系统禁止开机启动前台服务时，认证可能停止；对应行为需在目标手机实测。
+- 既有包标识 `top.kenvix.bleunlock`、密钥别名 `kenvix_unlock_identity_v1` 和签名消息原文属于兼容性标识。修改它们会影响已安装应用或 Windows 已保存的公钥，必须安排迁移与跨端联调。
+
 ## Windows 登录方式
 
 Windows 端注册一个原生 Credential Provider，由系统 LogonUI 调用。它不会更改 Windows 的锁屏背景、密码输入框、PIN、Windows Hello，也不会禁用其他凭据提供程序。

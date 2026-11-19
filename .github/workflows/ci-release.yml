@@ -40,6 +40,9 @@ jobs:
           test -x "$sdkmanager_bin"
           yes | "$sdkmanager_bin" --licenses >/dev/null || true
           "$sdkmanager_bin" --channel=3 --install 'platforms;android-37.0' 'build-tools;37.0.0'
+      - name: Validate documentation links and version information
+        shell: bash
+        run: python3 scripts/check_docs.py
       - name: Run JVM tests, lint, build debug APK
         shell: bash
         run: gradle --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
